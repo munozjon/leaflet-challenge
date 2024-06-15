@@ -13,12 +13,27 @@ let myMap = L.map( "map", {
 baseMap.addTo(myMap);
 
 // Get the color based on earthquake depth -> feature.geometry.coordinates[2]
+let colorsArr = ["#d73027", "#fc8d59", "#fee08b", "#d9ef8b", "#91cf60", "#1a9850"]
+let depthRanges = ["90+", "70-90", "50-70", "30-50", "10-30", "-10-10"]
+
 function getColor (depth) {
-    if (depth > 10) {
-        return "blue"
+    if (depth > 90) {
+        return colorsArr[0]
+    }
+    else if (depth > 70) {
+        return colorsArr[1]
+    }
+    else if (depth > 50) {
+        return colorsArr[2]
+    }
+    else if (depth > 30) {
+        return colorsArr[3]
+    }
+    else if (depth > 10) {
+        return colorsArr[4]
     }
     else {
-        return "green"
+        return colorsArr[5]
     }
 };
 
@@ -41,7 +56,7 @@ d3.json(url).then(function (data) {
     // Add a GeoJSON layer to the map after loading the file
     let geoJson = L.geoJson(data, {
         onEachFeature: function (feature, layer) {
-            layer.bindPopup(`<h3>Magnitude: ${feature.properties.mag}</h3> <hr> <h3>Depth: ${feature.geometry.coordinates[2]}</h3>`);
+            layer.bindPopup(`<h3>${feature.properties.title}</h3> <hr> <h4>Depth: ${feature.geometry.coordinates[2]}</h4>`);
         },
     
         // Turn each feature into a circleMarker on the map
@@ -57,9 +72,23 @@ d3.json(url).then(function (data) {
             });
         }
 
-    // Add the legend (look at the activities from day 2 and day 3)
-    // Similar to heat map activity from day 3
 
     }).addTo(myMap);
+
+    console.log(geoJson);
+
+    // Create the legend
+    let legend = L.control({position: "bottomright"});
+    legend.onAdd = function () {
+        let div = L.DomUtil.create("div", "info legend");
+        let limits = depthRanges;
+        let colors = colorsArr;
+        let labels = [];
+
+
+
+    };
+
+    legend.addTo(myMap);
 
 });
