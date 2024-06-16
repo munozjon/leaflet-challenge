@@ -75,20 +75,48 @@ d3.json(url).then(function (data) {
 
     }).addTo(myMap);
 
-    console.log(geoJson);
-
     // Create the legend
     let legend = L.control({position: "bottomright"});
     legend.onAdd = function () {
-        let div = L.DomUtil.create("div", "info legend");
+        let div = L.DomUtil.create("div", "info-legend");
         let limits = depthRanges;
         let colors = colorsArr;
         let labels = [];
 
+        let legendInfo = ["<h1>Depth</h1>", "<div class=\"labels\">"];
+  
+        limits.forEach(function (limit, index) {
+            legendInfo.push(`<div class=\"scale${index}\">${limit}</div>`)
+        })
+
+        div.innerHTML = legendInfo.join("") + "</div>"
+
+        colors.forEach(function (color, index) {
+            labels.push("<li style=\"background-color: " + color + "\"></li>")
+
+        });
+
+        div.innerHTML += "<ul>" + labels.join("") + "</ul>";
+
+        // div.innerHTML = legendInfo;
+
+        // limits.forEach( function (limit, index) {
+        //     labels.push(`<li style=\"background-color: ${colors[index]}; padding-left: 50px\">${limit}</li>`)
+        // });
 
 
+        // limits.forEach( function (limit, index) {
+        //     labels.push(`<i><strong>${limit}</strong><div class=\"color-box\" style=\"background-color: ${colors[index]};\"></div></i>`)
+        // });
+
+
+        // div.innerHTML += "<ul style=\"padding-left: 120px; left: 5px; list-style-type: none; background-color: #FFFFFF;\">" + labels.join("") + "</ul>";
+
+
+        return div;
     };
 
     legend.addTo(myMap);
+
 
 });
