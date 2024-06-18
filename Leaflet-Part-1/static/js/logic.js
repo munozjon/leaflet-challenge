@@ -77,26 +77,16 @@ d3.json(url).then(function (data) {
 
     // Create the legend
     let legend = L.control({position: "bottomright"});
-    legend.onAdd = function () {
-        let div = L.DomUtil.create("div", "info-legend");
-        let limits = depthRanges;
-        let colors = colorsArr;
-        let labels = [];
 
-        let legendInfo = ["<h1>Depth</h1>", "<div class=\"labels\">"];
-  
-        limits.forEach(function (limit, index) {
-            legendInfo.push(`<div class=\"scale-${index}\">${limit}</div>`)
-        })
-
-        div.innerHTML = legendInfo.join("") + "</div>"
-
-        colors.forEach(function (color, index) {
-            labels.push("<li style=\"background-color: " + color + "\"></li>")
-
-        });
-
-        div.innerHTML += "<ul>" + labels.join("") + "</ul>";
+    // Define what happens when the legend is added to the map
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'info legend');
+        // Loop through each category and create a label with a colored square for each
+        for (var i = 0; i < depthRanges.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + colorsArr[i] + '"></i> ' +
+                depthRanges[i] + '<br>';
+        }
 
         return div;
     };
