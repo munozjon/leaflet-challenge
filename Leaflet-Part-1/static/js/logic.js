@@ -78,10 +78,12 @@ d3.json(url).then(function (data) {
     // Create the legend
     let legend = L.control({position: "bottomright"});
 
-    // Define what happens when the legend is added to the map
+    // Function to add labels to the legend
     legend.onAdd = function (map) {
+
         var div = L.DomUtil.create('div', 'info legend');
-        // Loop through each category and create a label with a colored square for each
+
+        // Loop through ranges and return an HTML item
         for (var i = 0; i < depthRanges.length; i++) {
             div.innerHTML +=
                 '<i style="background:' + colorsArr[i] + '"></i> ' +
