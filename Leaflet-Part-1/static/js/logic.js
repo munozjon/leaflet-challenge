@@ -56,7 +56,7 @@ d3.json(url).then(function (data) {
     // Add a GeoJSON layer to the map after loading the file
     let geoJson = L.geoJson(data, {
         onEachFeature: function (feature, layer) {
-            layer.bindPopup(`<h3>${feature.properties.title}</h3> <hr> <h4>Depth: ${feature.geometry.coordinates[2]}</h4>`);
+            layer.bindPopup(`<h3>${feature.properties.place}</h3> <hr> <h4>Magnitude: ${feature.properties.mag}</h4> <h4>Depth: ${feature.geometry.coordinates[2]}</h4>`);
         },
     
         // Turn each feature into a circleMarker on the map
