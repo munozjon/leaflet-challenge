@@ -1,3 +1,4 @@
+// Create arrays for the colors and depth ranges to be used in the markers and legend
 const colorsArr = ["#d73027", "#fc8d59", "#fee08b", "#d9ef8b", "#91cf60", "#1a9850"];
 const depthRanges = ["90+", "70-90", "50-70", "30-50", "10-30", "-10-10"];
 
@@ -5,78 +6,72 @@ const depthRanges = ["90+", "70-90", "50-70", "30-50", "10-30", "-10-10"];
 
 function createMap(earthquakeData) {
 
-    // Create the tile layer that will be the background of our map.
-    let satellite = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    // Create the background layers for our map
+    var standard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             });
-
     var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
         maxZoom: 17,
         attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
     });
-  
-  
-    // Create a baseMaps object to hold the satellite and topo layers.
-    let baseMaps = {
-      "Satellite Map": satellite,
-      "Topography Map": topo
-    };
-  
-    // Initialize the layer groups
+    var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+
+    // Initialize the marker layer groups
     let earthquakes = createMarkers(earthquakeData)
     let plates = L.layerGroup()
 
-    // Load the tectonic plates geoJSON data
+    // Load the tectonic plates GeoJSON data and add to the layer group
     d3.json("https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json").then(function(plateData){
         L.geoJson(plateData, {
+            color:"yellow"
         }).addTo(plates)
     
     })
 
-    // Create an overlayMaps object to hold the earthquakes and plates layer groups.
+
+    // Create a baseMaps object to hold the background layers
+    let baseMaps = {
+        "Standard": standard,
+        "Topography": topo,
+        "Satellite": satellite
+      };
+  
+    // Create an overlayMaps object to hold the earthquakes and tectonic plates layer groups
     let overlayMaps = {
         "Earthquakes": earthquakes,
         "Tectonic Plates": plates
       };
 
-    // Create the map object with options.
-    let map = L.map("map", {
+    // Create the map object with options
+    let myMap = L.map("map", {
       center: [40.73, -100.0059],
       zoom: 3,
-      layers: [satellite, earthquakes, plates]
+      layers: [standard, earthquakes, plates]
     });
   
-    // Create a layer control, and pass it baseMaps and overlayMaps. Add the layer control to the map.
+    // Create a layer control, and pass it baseMaps and overlayMaps. Add the layer control to the map
     L.control.layers(baseMaps, overlayMaps, {
       collapsed: false
-    }).addTo(map);
-
-
+    }).addTo(myMap);
 
 
     // Create the legend
     let legend = L.control({position: "bottomright"});
-
     // Function to add labels to the legend
     legend.onAdd = function (map) {
-
         var div = L.DomUtil.create('div', 'info legend');
-
         // Loop through ranges and return an HTML item
         for (var i = 0; i < depthRanges.length; i++) {
             div.innerHTML +=
                 '<i style="background:' + colorsArr[i] + '"></i> ' +
                 depthRanges[i] + '<br>';
         }
-
         return div;
     };
-
-    legend.addTo(map);
-
+    legend.addTo(myMap);
   };
-
-
 
 
 function createMarkers(data) {
@@ -90,7 +85,6 @@ function createMarkers(data) {
                 depth > 10   ? colorsArr[4] :
                         colorsArr[5];
     }
-    
     // Get the radius based on magnitude -> feature.properties.mag
     function getRadius (magnitude) {
         if (magnitude == 0) {
@@ -117,19 +111,13 @@ function createMarkers(data) {
                 weight: 0.5
             });
         }
-
-
     });
-
     return geoJson;
-
 };
 
 
-// Set the url to the geoJson file
+// Make a call to the GeoJSON URL
 url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
-
-// Make a call to the geoJson url
 d3.json(url).then(function (data) {
        createMap(data);
 });
