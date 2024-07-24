@@ -1,59 +1,49 @@
-// Get the color based on earthquake depth -> feature.geometry.coordinates[2]
 const colorsArr = ["#d73027", "#fc8d59", "#fee08b", "#d9ef8b", "#91cf60", "#1a9850"];
 const depthRanges = ["90+", "70-90", "50-70", "30-50", "10-30", "-10-10"];
 
-function getColor (depth) {
-    if (depth > 90) {
-        return colorsArr[0]
-    }
-    else if (depth > 70) {
-        return colorsArr[1]
-    }
-    else if (depth > 50) {
-        return colorsArr[2]
-    }
-    else if (depth > 30) {
-        return colorsArr[3]
-    }
-    else if (depth > 10) {
-        return colorsArr[4]
-    }
-    else {
-        return colorsArr[5]
-    }
-};
-
-// Get the radius based on magnitude -> feature.properties.mag
-function getRadius (magnitude) {
-    if (magnitude == 0) {
-        magnitude += 1
-    }
-    return magnitude * 5
-};
 
 
-function createMap(earthequakeMarkers) {
+function createMap(earthquakeData) {
 
     // Create the tile layer that will be the background of our map.
-    let streetmap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    let satellite = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             });
+
+    var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17,
+        attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+    });
   
   
-    // Create a baseMaps object to hold the streetmap layer.
+    // Create a baseMaps object to hold the satellite and topo layers.
     let baseMaps = {
-      "Street Map": streetmap
+      "Satellite Map": satellite,
+      "Topography Map": topo
     };
   
-    // Create an overlayMaps object to hold the bikeStations layer.
+    // Initialize the layer groups
+    let earthquakes = createMarkers(earthquakeData)
+    let plates = L.layerGroup()
+
+    // Load the tectonic plates geoJSON data
+    d3.json("https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json").then(function(plateData){
+        L.geoJson(plateData, {
+        }).addTo(plates)
+    
+    })
+
+    // Create an overlayMaps object to hold the earthquakes and plates layer groups.
     let overlayMaps = {
-      "Bike Stations": earthequakeMarkers
-    };
+        "Earthquakes": earthquakes,
+        "Tectonic Plates": plates
+      };
+
     // Create the map object with options.
     let map = L.map("map", {
-      center: [40.73, -74.0059],
-      zoom: 12,
-      layers: [streetmap, earthequakeMarkers]
+      center: [40.73, -100.0059],
+      zoom: 3,
+      layers: [satellite, earthquakes, plates]
     });
   
     // Create a layer control, and pass it baseMaps and overlayMaps. Add the layer control to the map.
@@ -91,6 +81,24 @@ function createMap(earthequakeMarkers) {
 
 function createMarkers(data) {
 
+    // Get the color based on earthquake depth -> feature.geometry.coordinates[2]
+    function getColor(depth) {
+        return depth > 90  ? colorsArr[0] :
+                depth > 70  ? colorsArr[1] :
+                depth > 50  ? colorsArr[2] :
+                depth > 30   ? colorsArr[3] :
+                depth > 10   ? colorsArr[4] :
+                        colorsArr[5];
+    }
+    
+    // Get the radius based on magnitude -> feature.properties.mag
+    function getRadius (magnitude) {
+        if (magnitude == 0) {
+            magnitude += 1
+        }
+        return magnitude * 5
+    };
+    
     // Add a GeoJSON layer to the map after loading the file
     let geoJson = L.geoJson(data, {
         onEachFeature: function (feature, layer) {
@@ -113,16 +121,15 @@ function createMarkers(data) {
 
     });
 
-    console.log(geoJson);
-    createMap(geoJson);
+    return geoJson;
 
+};
 
-    };
 
 // Set the url to the geoJson file
 url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
 // Make a call to the geoJson url
 d3.json(url).then(function (data) {
-       createMarkers(data);
+       createMap(data);
 });
